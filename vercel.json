@@ -21,8 +21,15 @@
       "dest": "backend/api/index.ts"
     },
     {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/:tenant/(.*)",
+      "dest": "/index.html"
+    },
+    {
       "src": "/(.*)",
-      "dest": "frontend/$1"
+      "dest": "/index.html"
     }
   ]
 }
