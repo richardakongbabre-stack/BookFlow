@@ -1,6 +1,9 @@
 {
   "name": "bookflow-backend",
   "version": "1.0.0",
+  "engines": {
+    "node": "18.x"
+  },
   "description": "Multi-tenant booking platform API backend",
   "main": "dist/index.js",
   "scripts": {
