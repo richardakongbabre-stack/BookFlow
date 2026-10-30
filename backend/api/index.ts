@@ -47,4 +47,6 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
+// Export for Vercel serverless — works with both CommonJS and ES module interop
 export default app;
+module.exports = app;
