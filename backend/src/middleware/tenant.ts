@@ -9,7 +9,8 @@ const prisma = new PrismaClient();
  * Looks up the provider by slug in parameters or HTTP headers and attaches the provider ID to req.tenantId.
  */
 export async function resolveTenant(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-  let providerSlug = req.params.providerSlug || req.query.providerSlug as string || req.headers['x-provider-slug'] as string;
+  const rawProviderSlug = req.params.providerSlug || req.query.providerSlug || req.headers['x-provider-slug'];
+  const providerSlug = Array.isArray(rawProviderSlug) ? rawProviderSlug[0] : rawProviderSlug;
 
   if (!providerSlug && req.params.bookingId) {
     // Attempt to resolve provider context via booking
@@ -29,7 +30,7 @@ export async function resolveTenant(req: AuthenticatedRequest, res: Response, ne
 
   try {
     const provider = await prisma.provider.findUnique({
-      where: { slug: providerSlug },
+      where: { slug: String(providerSlug) },
       select: { id: true }
     });
 
@@ -58,10 +59,11 @@ export function enforceTenantAccess(req: AuthenticatedRequest, res: Response, ne
     return res.status(401).json({ error: 'Authentication required' });
   }
 
-  // Ensure the tenant ID resolved from user's staff profile matches the request context
-  const requestedTenantId = req.params.providerId || req.body.providerId || req.query.providerId;
+  // Ensure the tenant ID resolved from user's staff profile matches the request context.
+  const requestedTenantId = req.params.providerId || req.body?.providerId || req.query?.providerId;
+  const normalizedRequestedTenantId = Array.isArray(requestedTenantId) ? requestedTenantId[0] : requestedTenantId;
 
-  if (requestedTenantId && req.tenantId !== requestedTenantId) {
+  if (normalizedRequestedTenantId && req.tenantId !== normalizedRequestedTenantId) {
     return res.status(403).json({ error: 'Access Denied: You do not have permissions to access this tenant data' });
   }
 

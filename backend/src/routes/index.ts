@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticateJWT, requireRoles } from '../middleware/auth';
-import { resolveTenant } from '../middleware/tenant';
+import { enforceTenantAccess, resolveTenant } from '../middleware/tenant';
 import { validate } from '../middleware/validation';
 import { Role } from '@prisma/client';
 
@@ -56,16 +56,16 @@ router.get('/auth/me', authenticateJWT, getMe);
 // ==================== PROVIDER ROUTES ====================
 router.get('/providers', listProviders);
 router.post('/providers/onboard', validate(onboardProviderSchema), onboardProvider);
-router.get('/providers/profile/:providerSlug', getProviderBySlug);
+router.get('/providers/profile/:providerSlug', resolveTenant, getProviderBySlug);
 
 // Tenant-Isolated Provider Admin / Staff Routes
-router.get('/providers/staff', authenticateJWT, requireRoles(Role.PROVIDER_ADMIN, Role.STAFF), getProviderStaff);
-router.get('/providers/services', authenticateJWT, requireRoles(Role.PROVIDER_ADMIN, Role.STAFF), getProviderServices);
-router.post('/providers/staff/create', authenticateJWT, requireRoles(Role.PROVIDER_ADMIN), validate(createStaffSchema), createStaff);
-router.post('/providers/services/create', authenticateJWT, requireRoles(Role.PROVIDER_ADMIN), validate(createServiceSchema), createService);
-router.put('/providers/staff/:staffId/schedule', authenticateJWT, requireRoles(Role.PROVIDER_ADMIN), validate(updateScheduleSchema), updateStaffSchedule);
-router.post('/providers/staff/:staffId/exception', authenticateJWT, requireRoles(Role.PROVIDER_ADMIN), validate(addExceptionSchema), addStaffException);
-router.put('/providers/subscription', authenticateJWT, requireRoles(Role.PROVIDER_ADMIN), changeSubscription);
+router.get('/providers/staff', authenticateJWT, requireRoles(Role.PROVIDER_ADMIN, Role.STAFF), enforceTenantAccess, getProviderStaff);
+router.get('/providers/services', authenticateJWT, requireRoles(Role.PROVIDER_ADMIN, Role.STAFF), enforceTenantAccess, getProviderServices);
+router.post('/providers/staff/create', authenticateJWT, requireRoles(Role.PROVIDER_ADMIN), enforceTenantAccess, validate(createStaffSchema), createStaff);
+router.post('/providers/services/create', authenticateJWT, requireRoles(Role.PROVIDER_ADMIN), enforceTenantAccess, validate(createServiceSchema), createService);
+router.put('/providers/staff/:staffId/schedule', authenticateJWT, requireRoles(Role.PROVIDER_ADMIN), enforceTenantAccess, validate(updateScheduleSchema), updateStaffSchedule);
+router.post('/providers/staff/:staffId/exception', authenticateJWT, requireRoles(Role.PROVIDER_ADMIN), enforceTenantAccess, validate(addExceptionSchema), addStaffException);
+router.put('/providers/subscription', authenticateJWT, requireRoles(Role.PROVIDER_ADMIN), enforceTenantAccess, changeSubscription);
 
 // ==================== BOOKING ROUTES ====================
 router.get('/bookings/availability', validate(getAvailabilitySchema), getAvailability);
